@@ -1,0 +1,11 @@
+
+env/
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+media/
+
+
+node_modules/
+build/
