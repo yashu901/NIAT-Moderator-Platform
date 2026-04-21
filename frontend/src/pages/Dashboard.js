@@ -6,6 +6,7 @@ export default function Dashboard() {
     const [articles, setArticles] = useState([]);
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
+    const [editId, setEditId] = useState(null);
 
     const fetchArticles = () => {
         API.get("articles/")
@@ -19,18 +20,48 @@ export default function Dashboard() {
 
     const createArticle = async () => {
         try {
-            await API.post("articles/create/", {
-                title,
-                body,
-                category: "news",
-                status: "published"
-            });
+            if (editId) {
+                await API.put(`articles/${editId}/update/`, {
+                    title,
+                    body,
+                    category: "news",
+                    status: "published"
+                });
+
+                setEditId(null);
+
+            } else {
+                await API.post("articles/create/", {
+                    title,
+                    body,
+                    category: "news",
+                    status: "published"
+                });
+            }
+
             setTitle("");
             setBody("");
-            fetchArticles(); // refresh list
-        } catch {
-            alert("Error creating article");
+            fetchArticles();
+
+        } catch (error) {
+            console.log(error.response);
+            alert("Error saving article");
         }
+    };
+
+    const handleDelete = async (id) => {
+        try {
+            await API.delete(`articles/${id}/delete/`);;
+            fetchArticles();
+        } catch (error) {
+            console.log(error.response);
+        }
+    };
+
+    const handleEdit = (article) => {
+        setEditId(article.id);
+        setTitle(article.title);
+        setBody(article.body);
     };
 
     return (
@@ -48,7 +79,9 @@ export default function Dashboard() {
                 onChange={(e) => setBody(e.target.value)}
             />
             <br />
-            <button onClick={createArticle}>Create</button>
+            <button onClick={createArticle}>
+                {editId ? "Update" : "Create"}
+            </button>
 
             <hr />
 
@@ -57,6 +90,9 @@ export default function Dashboard() {
                 <div className="article" key={a.id}>
                     <h3>{a.title}</h3>
                     <p>{a.body}</p>
+
+                    <button onClick={() => handleEdit(a)}>Edit</button>
+                    <button onClick={() => handleDelete(a.id)}>Delete</button>
                 </div>
             ))}
 
