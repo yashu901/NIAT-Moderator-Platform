@@ -95,7 +95,7 @@ export default function Dashboard() {
             <div className="max-w-4xl mx-auto p-6">
 
 
-                {role === "admin" && (
+                {(role === "admin" || role ==="moderator") &&  (
                     <div className="flex justify-end mb-4">
                         <button
                             onClick={() => setShowInvite(true)}
