@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .models import Invite, Campus
+from django.core.mail import send_mail
 
 
 User = get_user_model()
@@ -65,7 +66,17 @@ def send_invite(request):
 
     invite = Invite.objects.create(email=email, campus=campus)
 
-    link = f"http://localhost:3000/onboard?token={invite.token}"
+   
+    link = f"https://your-vercel-app.vercel.app/onboard?token={invite.token}"
+
+    
+    send_mail(
+        subject="You're invited!",
+        message=f"Click this link to join:\n{link}",
+        from_email="your_email@gmail.com",
+        recipient_list=[email],
+        fail_silently=False,
+    )
 
     return Response({
         "message": "Invite created successfully",
@@ -81,19 +92,24 @@ def onboard(request):
         return Response({'error': 'Token and password required'}, status=400)
 
     try:
-        invite = Invite.objects.get(token=token, is_used=False)
+        invite = Invite.objects.get(token=token)
     except Invite.DoesNotExist:
-        return Response({'error': 'Invalid or expired token'}, status=400)
+        return Response({'error': 'Invalid token'}, status=400)
 
-    user = User(
+    user, created = User.objects.get_or_create(
         username=invite.email,
-        role='moderator',
-        campus=invite.campus
+        defaults={
+            'campus': invite.campus,
+            'role': 'moderator',
+            'is_active': True
+        }
     )
+
     user.set_password(password)
+    user.is_active = True
     user.save()
 
-    invite.is_used = True
-    invite.save()
+    # optional but recommended
+    invite.delete()
 
-    return Response({'message': 'Account created successfully'})
+    return Response({'message': 'Account activated'})
