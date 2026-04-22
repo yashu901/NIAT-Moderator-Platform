@@ -83,6 +83,7 @@ def send_invite(request):
         "link": link
     })
 
+
 @api_view(['POST'])
 def onboard(request):
     token = request.data.get('token')
@@ -99,9 +100,9 @@ def onboard(request):
     user, created = User.objects.get_or_create(
         username=invite.email,
         defaults={
-            'campus': invite.campus,
-            'role': 'moderator',
-            'is_active': True
+            "campus": invite.campus,
+            "role": "moderator",
+            "is_active": True
         }
     )
 
@@ -109,7 +110,7 @@ def onboard(request):
     user.is_active = True
     user.save()
 
-    # optional but recommended
+    # delete invite after use
     invite.delete()
 
     return Response({'message': 'Account activated'})
